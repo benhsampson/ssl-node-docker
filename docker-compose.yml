@@ -1,0 +1,58 @@
+version: "3"
+
+services:
+  nodejs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nodejs
+    container_name: nodejs
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  webserver:
+    image: nginx:mainline-alpine
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      # Static assets
+      - web-root:/var/www/html
+      # Mount the Nginx configuration host to the relevant directory on the container
+      - ./nginx-conf:/etc/nginx/conf.d
+      # Mount the relevant Let's Encrypt certificates and keys to the appropriate directory on the container
+      - certbot-etc:/etc/letsencrypt
+      # Mount the default Let's Encrypt working directory to the appropriate directory on the container
+      - certbot-var:/var/lib/letsencrypt
+    depends_on:
+      - nodejs
+    networks:
+      - app-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/var/www/html
+    depends_on:
+      - webserver
+    # @fixme: Currently using the Let's Encrypt staging environment to generate test certificates
+    command: certonly --webroot --webroot-path=/var/www/html --email bensampsondev@gmail.com --agree-tos --no-eff-email --staging -d debate.chat  -d www.debate.chat
+
+volumes:
+  certbot-etc:
+  certbot-var:
+  web-root:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ben/ssl-node-docker/views/
+      o: bind
+
+networks:
+  app-network:
+    driver: bridge

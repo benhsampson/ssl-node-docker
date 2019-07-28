@@ -41,7 +41,7 @@ services:
     depends_on:
       - webserver
     # @fixme: Currently using the Let's Encrypt staging environment to generate test certificates
-    command: certonly --webroot --webroot-path=/var/www/html --email bensampsondev@gmail.com --agree-tos --no-eff-email --staging -d debate.chat  -d www.debate.chat
+    command: certonly --webroot --webroot-path=/var/www/html --email bensampsondev@gmail.com --agree-tos --no-eff-email --staging -d debate.chat
 
 volumes:
   certbot-etc:
